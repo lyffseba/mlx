@@ -2,6 +2,10 @@
   font-family: system-ui, sans-serif;
   line-height: 1.5;
   font-weight: 400;
+  --glow-color: rgba(74, 222, 128, 0.35);
+  --accent-color: #4ade80;
+  --bg-dark: #1a1a1a;
+  --bg-light: #222;
 }
 
 body {
@@ -10,8 +14,9 @@ body {
   place-items: center;
   min-width: 320px;
   min-height: 100vh;
-  background: #1a1a1a;
+  background: var(--bg-dark);
   color: white;
+  background: radial-gradient(circle at center, #2a2a2a, var(--bg-dark));
 }
 
 #app {
@@ -24,18 +29,28 @@ body {
 }
 
 .container {
-  background: #222;
+  background: var(--bg-light);
   padding: 20px;
-  border-radius: 10px;
+  border-radius: 15px;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+}
+
+.container:hover {
+  box-shadow: 0 0 25px rgba(74, 222, 128, 0.15);
+  transform: translateY(-2px);
 }
 
 .chat-container {
-  background: #222;
-  border-radius: 10px;
+  background: var(--bg-light);
+  border-radius: 15px;
   display: flex;
   flex-direction: column;
   height: 100%;
   min-height: 600px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
 }
 
 .chat-messages {
@@ -44,25 +59,40 @@ body {
   padding: 15px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
 }
 
 .message {
-  padding: 10px;
-  border-radius: 8px;
+  padding: 12px;
+  border-radius: 12px;
   max-width: 85%;
+  transition: all 0.3s ease;
+  animation: messageAppear 0.3s ease forwards;
+}
+
+@keyframes messageAppear {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .message.user {
-  background: #4ade80;
+  background: var(--accent-color);
   color: black;
   align-self: flex-end;
+  box-shadow: 0 0 15px var(--glow-color);
 }
 
 .message.assistant {
   background: #333;
   color: white;
   align-self: flex-start;
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .message-content {
@@ -85,56 +115,74 @@ body {
 .chat-input {
   padding: 15px;
   background: #333;
-  border-radius: 0 0 10px 10px;
+  border-radius: 0 0 15px 15px;
   display: flex;
-  gap: 10px;
+  gap: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .chat-input textarea {
   flex-grow: 1;
   background: #444;
-  border: none;
-  border-radius: 5px;
-  padding: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 12px;
   color: white;
   resize: none;
   font-family: inherit;
-  line-height: 1.4;
+  transition: all 0.3s ease;
 }
 
-.chat-input textarea:disabled {
-  opacity: 0.7;
-  cursor: not-allowed;
+.chat-input textarea:focus {
+  outline: none;
+  border-color: var(--accent-color);
+  box-shadow: 0 0 10px var(--glow-color);
 }
 
-.chat-input button {
-  background: #4ade80;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 5px;
+button {
+  background: var(--accent-color);
   color: black;
-  font-weight: bold;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 16px;
   cursor: pointer;
-  transition: background-color 0.3s;
-  min-width: 80px;
+  font-weight: 500;
+  transition: all 0.3s ease;
 }
 
-.chat-input button:hover:not(:disabled) {
-  background: #22c55e;
+button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 15px var(--glow-color);
 }
 
-.chat-input button:disabled {
-  opacity: 0.7;
-  cursor: not-allowed;
+button:active {
+  transform: translateY(0);
+}
+
+/* Plot styling */
+.js-plotly-plot {
+  border-radius: 15px;
+  overflow: hidden;
+  background: var(--bg-light) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+}
+
+.js-plotly-plot .plotly {
+  background: transparent !important;
+}
+
+.js-plotly-plot .plot-container {
+  filter: drop-shadow(0 0 10px var(--glow-color));
 }
 
 h1 {
-  color: #4ade80;
+  color: var(--accent-color);
   margin-bottom: 20px;
 }
 
 .info {
-  background: #333;
+  background: var(--bg-light);
   padding: 15px;
   border-radius: 5px;
   margin-bottom: 20px;
@@ -143,7 +191,7 @@ h1 {
 }
 
 .info h2 {
-  color: #4ade80;
+  color: var(--accent-color);
   margin-top: 0;
 }
 
@@ -159,31 +207,16 @@ h1 {
   margin-bottom: 20px;
 }
 
-button {
-  background: #4ade80;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 5px;
-  color: black;
-  font-weight: bold;
-  cursor: pointer;
-  transition: background-color 0.3s;
-}
-
-button:hover {
-  background: #22c55e;
-}
-
 #results {
   text-align: center;
   margin: 20px 0;
   padding: 10px;
-  background: #333;
+  background: var(--bg-light);
   border-radius: 5px;
 }
 
 #plot {
-  background: #333;
+  background: var(--bg-light);
   padding: 10px;
   border-radius: 5px;
 }
