@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Magic Line Drawer!</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        body {
+            font-family: "Comic Sans MS", cursive;
+            margin: 0;
+            padding: 20px;
+            background: #2c3e50;
+            color: white;
+            text-align: center;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #34495e;
+            padding: 20px;
+            border-radius: 20px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #2ecc71;
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px #1e8449;
+        }
+        .story {
+            background: #3498db;
+            padding: 15px;
+            border-radius: 15px;
+            margin: 20px 0;
+            font-size: 1.2em;
+            line-height: 1.6;
+        }
+        .magic-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        .magic-button {
+            background: #2ecc71;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 50px;
+            color: white;
+            font-size: 1.2em;
+            font-family: "Comic Sans MS", cursive;
+            cursor: pointer;
+            transition: transform 0.2s;
+            box-shadow: 0 4px #1e8449;
+        }
+        .magic-button:hover {
+            transform: translateY(-2px);
+        }
+        .magic-button:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px #1e8449;
+        }
+        #results {
+            background: #3498db;
+            padding: 15px;
+            border-radius: 15px;
+            margin: 20px 0;
+            font-size: 1.2em;
+        }
+        #plot {
+            background: white;
+            padding: 10px;
+            border-radius: 15px;
+            margin-top: 20px;
+        }
+        .steps {
+            text-align: left;
+            background: #3498db;
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+        }
+        .step {
+            margin: 10px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .step-number {
+            background: #2ecc71;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎨 Magic Line Drawer! ✨</h1>
+        
+        <div class="story">
+            Hi there! Today we're going to play with a magical computer that can draw lines through dots! 
+            It's like connecting the dots, but the computer learns how to do it all by itself! 
+            Isn't that cool? 🌟
+        </div>
+
+        <div class="steps">
+            <div class="step">
+                <div class="step-number">1</div>
+                <div>First, click "Make Dots" to create some magical dots!</div>
+            </div>
+            <div class="step">
+                <div class="step-number">2</div>
+                <div>Then, click "Draw Line" to watch the computer learn where to draw the line!</div>
+            </div>
+            <div class="step">
+                <div class="step-number">3</div>
+                <div>The computer will try its best to draw a line close to all the dots!</div>
+            </div>
+        </div>
+
+        <div class="magic-buttons">
+            <button class="magic-button" onclick="generateData()">✨ Make Dots</button>
+            <button class="magic-button" onclick="trainModel()">🎨 Draw Line</button>
+        </div>
+        
+        <div id="results"></div>
+        <div id="plot"></div>
+    </div>
+
+    <script>
+        let currentData = null;
+        let trainedParams = null;
+
+        async function generateData() {
+            const response = await fetch('http://localhost:3000/generate_data');
+            currentData = await response.json();
+            plotData();
+            document.getElementById('results').innerHTML = '✨ Magical dots appeared! Now click "Draw Line" to connect them!';
+        }
+
+        async function trainModel() {
+            if (!currentData) {
+                alert('Oops! We need some dots first! Click "Make Dots" to create them!');
+                return;
+            }
+
+            document.getElementById('results').innerHTML = '🎨 The computer is thinking really hard...';
+            
+            const response = await fetch('http://localhost:3000/train', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(currentData)
+            });
+            trainedParams = await response.json();
+            
+            const predResponse = await fetch('http://localhost:3000/predict', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ X: currentData.X })
+            });
+            const predictions = await predResponse.json();
+            
+            plotData(predictions.predictions);
+            document.getElementById('results').innerHTML = '🌟 Ta-da! The computer drew a magical line!';
+        }
+
+        function plotData(predictions = null) {
+            const trace1 = {
+                x: currentData.X.map(x => x[0]),
+                y: currentData.y,
+                mode: 'markers',
+                type: 'scatter',
+                name: 'Magic Dots',
+                marker: { 
+                    color: '#3498db',
+                    size: 12,
+                    symbol: 'star'
+                }
+            };
+
+            const data = [trace1];
+
+            if (predictions) {
+                const sortedPoints = currentData.X.map((x, i) => ({x: x[0], y: predictions[i]}))
+                    .sort((a, b) => a.x - b.x);
+                
+                const trace2 = {
+                    x: sortedPoints.map(p => p.x),
+                    y: sortedPoints.map(p => p.y),
+                    mode: 'lines',
+                    type: 'scatter',
+                    name: 'Magic Line',
+                    line: { 
+                        color: '#2ecc71',
+                        width: 4,
+                        dash: 'dashdot'
+                    }
+                };
+                data.push(trace2);
+            }
+
+            const layout = {
+                title: 'Magic Dots and Lines! ✨',
+                paper_bgcolor: 'white',
+                plot_bgcolor: '#f8f9fa',
+                font: { 
+                    family: '"Comic Sans MS", cursive',
+                    size: 14
+                },
+                xaxis: { 
+                    title: 'Magic Numbers →',
+                    gridcolor: '#e0e0e0'
+                },
+                yaxis: { 
+                    title: 'More Magic Numbers ↑',
+                    gridcolor: '#e0e0e0'
+                },
+                showlegend: true
+            };
+
+            Plotly.newPlot('plot', data, layout);
+        }
+
+        // Start the magic when the page loads!
+        generateData();
+    </script>
+</body>
+</html>
